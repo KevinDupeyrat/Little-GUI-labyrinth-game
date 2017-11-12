@@ -273,7 +273,7 @@ def main():
                                         id_joueur.identifient + 1)
                                     c.send(
                                         ("\nFin de partie." + string).encode())
-                                    i = nombre_fois - 1
+                                    i = nombre_fois
                                     serveur_lance = False
                             else:
                                 for c in clients_connectes:
