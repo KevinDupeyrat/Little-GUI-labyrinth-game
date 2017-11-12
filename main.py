@@ -187,7 +187,7 @@ class Frame_Principal(Frame):
                         self.entry_commande.config(state='disabled')
                         self.b_enoyer.config(state='disabled')
                     # Quelqu'un a mis fin à la partie
-                    elif msg_recu == "\nFin de partie.":
+                    if msg_recu == "\nFin de partie.":
                         print("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL")
                         self.connexion_avec_serveur.close()
                         self.deconnexion_serveur()

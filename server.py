@@ -26,14 +26,14 @@ def init_serveur():
 
 def init_carte():
     """ Fonction d'affichage de carte.
-    Elle affiche toutes les cartes présente dans
-    le dossier 'cartes' """
+        Elle affiche toutes les cartes présente dans
+        le dossier 'cartes' """
 
     cartes = []
     input_ok = False
 
-    # On charge les cartes existantes
-    # qui sont présentent dans le dossier 'cartes'
+    """ On charge les cartes existantes
+        qui sont présentent dans le dossier 'cartes' """
     for nom_fichier in os.listdir("cartes"):
         if nom_fichier.endswith(".txt"):
             chemin = os.path.join("cartes", nom_fichier)
@@ -41,9 +41,9 @@ def init_carte():
             with open(chemin, "r") as fichier:
                 contenu = fichier.read()
 
-            # Création d'une carte, à compléter
+            """ Création d'une carte, à compléter """
             lab = Labyrinthe(nom_carte, contenu)
-            # Ajout de la carte dans la liste de carte
+            """ Ajout de la carte dans la liste de carte """
             cartes.append(lab)
 
     print('Liste des cartes disponibles : \n')
@@ -52,6 +52,7 @@ def init_carte():
 
     choix = input("Faites votre choix \n")
 
+    """ On fait la vérificationd de la saisie """
     while not input_ok:
         try:
             choix = int(choix)
@@ -66,6 +67,7 @@ def init_carte():
             print('Vous n\'avez pas choisi une carte disponible')
             choix = input('Faites votre choix ')
 
+    """ attend les joueurs """
     print("En attente de joueurs ...")
     return cartes[choix - 1]
 
@@ -85,22 +87,44 @@ def faire_action(identifient, action, direction, labyrinthe):
         return labyrinthe.robot_gauche(identifient, action)
 
 
-def a_qui_le_tour(id_joueur, au_tour_de, c, string):
+# def a_qui_le_tour(id_joueur, tabIdJoueur, tabClientPartie):
+#     """ Méthode qui permet de savoir c'est à qui de jouer
+#         et donc de faire les action nécessaire avec la GUI.
+#         On reçois en paramètre l'id du jour qui a jouer
+#         et la liste de joueur. C'est donc a celui d'après de jouer """
+#     au_tour_de = None
+#     string = None
 
-    print("Id joueur : {}\n".format(id_joueur))
-    print("Au tour de : {}\n".format(au_tour_de))
+#     if (id_joueur + 1) > len(tabIdJoueur):
+#         au_tour_de = 1
+#     else:
+#         au_tour_de = id_joueur + 1
 
-    if id_joueur == au_tour_de:
-        c.send(b"\n--JOUER\n")
-        string += "\nC'est à vous de jouer\n"
-    else:
-        c.send(b"\n--PASJOUER\n")
-        string += "\nVeuillez patienter . . ."
-        string += "\nC'est au tour du joueur"
-        string += " {} de jouer\n".format(
-            id_joueur)
+#     # print("Id joueur : {}\n".format(id_joueur))
+#     # print("Au tour de : {}\n".format(au_tour_de))
+#     i = 0
+#     for c in tabClientPartie:
 
-    return string
+#         print("au_tour_de : {}".format(au_tour_de))
+#         print("tabIdJoueur i : {}".format(tabIdJoueur[i]))
+
+#         # On envoie au joueur à qui c'est le tour
+#         # le signal que c'est à lui
+#         if au_tour_de == tabIdJoueur[i]:
+#             c.send(b"\n--JOUER\n")
+#             string += "\nC'est à vous de jouer\n"
+#         # On envoie au autres le signal que ce n'est pas
+#         # a eux de jouer et qu'ils doivent attendre
+#         # leur tour
+#         else:
+#             c.send(b"\n--PASJOUER\n")
+#             string += "\nVeuillez patienter . . ."
+#             string += "\nC'est au tour du joueur"
+#             string += " {} de jouer\n".format(
+#                 id_joueur)
+#         i = i + 1
+
+#     return string
 
 
 def main():
@@ -116,7 +140,6 @@ def main():
     ids = []
     nombre_fois = 1
     commencer_partie = False
-    au_tour_de = 0
 
     serveur_lance = True
     clients_connectes = []
@@ -187,9 +210,11 @@ def main():
                             for c in clients_connectes:
 
                                 string = ""
-                                # On envoie le message que c'est à son tour
-                                string += a_qui_le_tour(id_index,
-                                                        au_tour_de, c, string)
+                                # # On envoie le message que c'est à son tour
+                                # string += a_qui_le_tour(
+                                #     id_joueur.identifient - 1,
+                                #     id_index,
+                                #     clients_connectes)
 
                                 string += "La partie peut commencer !  :)"
                                 string += " \nVous éte le joueur "
@@ -236,15 +261,9 @@ def main():
                                 # joueur joue.
                                 # Une fois que cela est déterminé,
                                 # on en informe tous les joueurs
-                                string += a_qui_le_tour(id_index,
-                                                        au_tour_de, c, string)
-
-                        # On incrémante le compteur du tour
-                        # donc on change de joueur
-                        if au_tour_de < len(ids):
-                            au_tour_de += 1
-                        else:
-                            au_tour_de = 1
+                                # string += a_qui_le_tour(
+                                #     id_joueur.identifient,
+                                #     id_index, clients_connectes)
 
                             if message_retour[0] is True:
                                 for c in clients_connectes:
@@ -256,6 +275,9 @@ def main():
                                         ("\nFin de partie." + string).encode())
                                     i = nombre_fois - 1
                                     serveur_lance = False
+                            else:
+                                for c in clients_connectes:
+                                    c.send((string + str(labyrinthe)).encode())
 
                     elif msg_recu == "fin":
                         serveur_lance = False
@@ -269,13 +291,6 @@ def main():
                         message_retour = faire_action(
                             id_joueur.identifient,
                             action, direction, labyrinthe)
-
-                        # On incrémante le compteur du tour
-                        # donc on change de joueur
-                        if au_tour_de < len(ids):
-                            au_tour_de += 1
-                        else:
-                            au_tour_de = 1
 
                         string = ""
                         for c in clients_connectes:
